@@ -82,15 +82,6 @@ export function PlaceMatchCard({
             <Image src="/icons/map-pin-blue.svg" alt="Candidate location" width={16} height={20} className="shrink-0" />
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <button
-              className="text-[14px] leading-[20px] font-medium text-destructive hover:underline whitespace-nowrap"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMatchButClosed?.();
-              }}
-            >
-              Confirm (Closed)
-            </button>
             <Button
               variant="outline"
               size="sm"
@@ -135,7 +126,7 @@ export function PlaceMatchCard({
               href={foursquareUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[14px] leading-[20px] font-normal text-foreground hover:text-primary inline-flex items-center gap-1"
+              className="text-[14px] leading-[20px] font-normal text-primary hover:text-primary/80 inline-flex items-center gap-1"
               onClick={(e) => e.stopPropagation()}
             >
               See on Foursquare
