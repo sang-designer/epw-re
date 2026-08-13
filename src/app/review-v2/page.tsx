@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 
 import { Header } from "@/components/place-matcher/header";
 import { InstructionsDialog } from "@/components/place-matcher/instructions-dialog";
+import { ManualVenueInput } from "@/components/place-matcher/manual-venue-input";
 
 // Dynamically import the map to avoid SSR issues with Leaflet
 // #region agent log
@@ -145,7 +146,7 @@ export default function ReviewV2Page() {
     }, 1000);
   }, []);
 
-  const showMatches = placeStatus === "open" || placeStatus === "closed";
+  const showMatches = placeStatus !== null;
 
   // Build map pins
   const mapPins = useMemo(
@@ -421,19 +422,13 @@ export default function ReviewV2Page() {
                     </Card>
                   ))}
                 </div>
-              </div>
-            </div>
-          )}
 
-          {!showMatches && placeStatus && (
-            <div className="flex-1 flex items-center justify-center text-center px-4">
-              <div>
-                <p className="text-[16px] leading-[24px] font-semibold text-foreground mb-2">
-                  Location marked as {placeStatus === "invalid" ? "Invalid" : "Closed"}
-                </p>
-                <p className="text-[14px] leading-[20px] text-[#646464]">
-                  No matching required. Click Submit to continue.
-                </p>
+                <ManualVenueInput
+                  className="pt-4"
+                  onMatch={(venueId) => {
+                    setSelectedMatches((prev) => new Set(prev).add(venueId.trim()));
+                  }}
+                />
               </div>
             </div>
           )}
