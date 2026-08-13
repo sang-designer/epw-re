@@ -91,7 +91,7 @@ export function PlaceMatchCard({
                 onMatch?.();
               }}
             >
-              Confirm
+              Match
             </Button>
           </div>
         </div>

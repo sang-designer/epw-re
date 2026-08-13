@@ -4,7 +4,7 @@ import { Copy, Search } from "lucide-react";
 import Image from "next/image";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface PlaceSummaryCardProps {
@@ -18,6 +18,10 @@ interface PlaceSummaryCardProps {
   };
   onSearchWeb?: () => void;
   onCopyReferenceId?: () => void;
+  onNewPlace?: () => void;
+  onClosedPlace?: () => void;
+  onInvalidPlace?: () => void;
+  onSkip?: () => void;
   className?: string;
 }
 
@@ -29,11 +33,15 @@ export function PlaceSummaryCard({
   reportingUser,
   onSearchWeb,
   onCopyReferenceId,
+  onNewPlace,
+  onClosedPlace,
+  onInvalidPlace,
+  onSkip,
   className,
 }: PlaceSummaryCardProps) {
   return (
-    <Card className={cn("overflow-hidden bg-primary/5 border-primary/20 py-0 gap-0", className)}>
-      <CardContent className="px-3 py-3 space-y-0.5">
+    <Card className={cn("overflow-hidden bg-primary/5 border-primary/20", className)}>
+      <CardContent className="space-y-0.5">
         {/* Name with red pin icon */}
         <div className="flex items-center gap-2">
           <h2 className="text-[16px] leading-[24px] font-semibold text-[#171417] underline decoration-foreground/30 underline-offset-2">
@@ -96,6 +104,42 @@ export function PlaceSummaryCard({
           </Button>
         </div>
       </CardContent>
+
+      {/* Action Buttons in Footer */}
+      <CardFooter className="flex items-center gap-3 bg-primary/5 border-primary/20">
+        <Button
+          variant="outline"
+          className="flex-1 text-[14px] leading-[20px] font-medium h-9 text-primary border-primary hover:bg-primary/10"
+          title="This place is real but not in our database"
+          onClick={onNewPlace}
+        >
+          New Place
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1 text-[14px] leading-[20px] font-medium h-9 text-destructive border-destructive hover:bg-destructive/10"
+          title="This place has permanently closed"
+          onClick={onClosedPlace}
+        >
+          Closed Place
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1 text-[14px] leading-[20px] font-medium h-9 text-destructive border-destructive hover:bg-destructive/10"
+          title="This place doesn't exist or is spam"
+          onClick={onInvalidPlace}
+        >
+          Invalid Place
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1 text-[14px] leading-[20px] font-medium h-9 text-primary border-primary hover:bg-primary/10"
+          title="Not sure, come back later"
+          onClick={onSkip}
+        >
+          Skip
+        </Button>
+      </CardFooter>
     </Card>
   );
 }

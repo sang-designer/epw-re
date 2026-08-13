@@ -9,10 +9,11 @@ import { Separator } from "@/components/ui/separator";
 import {
   PlaceSummaryCard,
   ManualVenueInput,
-  ActionButtons,
   Header,
   InstructionsDialog,
   MatchConfirmDialog,
+  NewPlaceConfirmDialog,
+  ClosedPlaceDialog,
 } from "@/components/place-matcher";
 import { PlaceMatchCard } from "@/components/place-matcher/place-match-card";
 
@@ -146,6 +147,8 @@ export default function PlaceMatcherPage() {
   const [currentPlaceIndex, setCurrentPlaceIndex] = useState(0);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [matchConfirmOpen, setMatchConfirmOpen] = useState(false);
+  const [newPlaceConfirmOpen, setNewPlaceConfirmOpen] = useState(false);
+  const [closedPlaceDialogOpen, setClosedPlaceDialogOpen] = useState(false);
   const [pendingMatchId, setPendingMatchId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hoveredCandidateId, setHoveredCandidateId] = useState<string | null>(null);
@@ -177,11 +180,39 @@ export default function PlaceMatcherPage() {
   }, []);
 
   const handleNewPlace = useCallback(() => {
+    setNewPlaceConfirmOpen(true);
+  }, []);
+
+  const handleConfirmNewPlace = useCallback(() => {
+    setNewPlaceConfirmOpen(false);
     setLoading(true);
     setTimeout(() => {
       setCurrentPlaceIndex((prev) => (prev + 1) % samplePlaces.length);
       setLoading(false);
     }, 1000);
+  }, []);
+
+  const handleCancelNewPlace = useCallback(() => {
+    setNewPlaceConfirmOpen(false);
+  }, []);
+
+  const handleClosedPlace = useCallback(() => {
+    setClosedPlaceDialogOpen(true);
+  }, []);
+
+  const handleConfirmClosedPlace = useCallback((matchingPlaceIds?: string[]) => {
+    setClosedPlaceDialogOpen(false);
+    setLoading(true);
+    // If matchingPlaceIds is provided, the place was closed and matches existing places
+    // Otherwise, it was closed and does not match
+    setTimeout(() => {
+      setCurrentPlaceIndex((prev) => (prev + 1) % samplePlaces.length);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  const handleCancelClosedPlace = useCallback(() => {
+    setClosedPlaceDialogOpen(false);
   }, []);
 
   const handleSkip = useCallback(() => {
@@ -226,7 +257,7 @@ export default function PlaceMatcherPage() {
           <div className="px-4 pt-3 pb-1 space-y-1.5">
             <div className="flex items-center justify-between">
               <h1 className="text-[20px] leading-[28px] font-semibold text-foreground">
-                Place Identifier
+                Review Pending Places
               </h1>
               <Button
                 variant="link"
@@ -253,7 +284,7 @@ export default function PlaceMatcherPage() {
 
           {/* Sticky source card */}
           {!loading && (
-            <div className="px-4 py-2 border-b border-border shrink-0">
+            <div className="px-4 py-6 border-b border-border shrink-0">
               <PlaceSummaryCard
                 name={currentPlace.source.name}
                 address={currentPlace.source.address}
@@ -273,6 +304,10 @@ export default function PlaceMatcherPage() {
                     currentPlace.source.externalReferenceId
                   )
                 }
+                onNewPlace={handleNewPlace}
+                onClosedPlace={handleClosedPlace}
+                onInvalidPlace={handleNewPlace}
+                onSkip={handleSkip}
               />
             </div>
           )}
@@ -286,7 +321,7 @@ export default function PlaceMatcherPage() {
             ) : (
               <>
                 {/* Section heading with bold text */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 pt-6">
                   <Separator className="flex-1" />
                   <span className="text-[14px] leading-[20px] font-semibold text-foreground whitespace-nowrap">
                     Is one of these the same place?
@@ -350,15 +385,6 @@ export default function PlaceMatcherPage() {
               </>
             )}
           </div>
-
-          {/* Action buttons - sticky bottom */}
-          <ActionButtons
-            className="border-t border-border shrink-0"
-            onNewPlace={handleNewPlace}
-            onClosedPlace={handleNewPlace}
-            onInvalidPlace={handleNewPlace}
-            onSkip={handleSkip}
-          />
         </div>
 
         {/* Right panel - Map */}
@@ -383,6 +409,21 @@ export default function PlaceMatcherPage() {
         open={matchConfirmOpen}
         onConfirm={handleConfirmMatch}
         onCancel={handleCancelMatch}
+      />
+      <NewPlaceConfirmDialog
+        open={newPlaceConfirmOpen}
+        onConfirm={handleConfirmNewPlace}
+        onCancel={handleCancelNewPlace}
+      />
+      <ClosedPlaceDialog
+        open={closedPlaceDialogOpen}
+        candidates={currentPlace.candidates.map((c) => ({
+          id: c.id,
+          name: c.name,
+          address: c.address,
+        }))}
+        onConfirm={handleConfirmClosedPlace}
+        onCancel={handleCancelClosedPlace}
       />
     </div>
   );

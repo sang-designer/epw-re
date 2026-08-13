@@ -6,3 +6,5 @@ export { MapPanel } from "./map-panel";
 export { Header } from "./header";
 export { InstructionsDialog } from "./instructions-dialog";
 export { MatchConfirmDialog } from "./match-confirm-dialog";
+export { NewPlaceConfirmDialog } from "./new-place-confirm-dialog";
+export { ClosedPlaceDialog } from "./closed-place-dialog";
