@@ -472,6 +472,8 @@ export default function ReviewV2Page() {
       <InstructionsDialog
         open={instructionsOpen}
         onClose={() => setInstructionsOpen(false)}
+        variant="two-step"
+        activeStep={showMatches ? 2 : 1}
       />
     </div>
   );
