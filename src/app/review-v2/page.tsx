@@ -47,49 +47,137 @@ const MapPanel = dynamic(
 );
 
 // Sample data
-const samplePlace = {
-  id: "place-1",
-  source: {
-    name: "Samco Construction",
-    address: "11858 San Pablo Ave, El Cerrito, CA, 94530",
-    category: "Construction",
-    externalReferenceId: "685d210b474da66ab6a126ae",
-    lat: 37.9161,
-    lng: -122.3108,
+const samplePlaces = [
+  {
+    id: "place-1",
+    source: {
+      name: "Samco Construction",
+      address: "11858 San Pablo Ave, El Cerrito, CA, 94530",
+      category: "Construction",
+      externalReferenceId: "685d210b474da66ab6a126ae",
+      lat: 37.9161,
+      lng: -122.3108,
+    },
+    candidates: [
+      {
+        id: "p1-c1",
+        name: "Coffee Benu 1",
+        address: "1265 65th St, Emeryville, CA, 94608 United States",
+        category: "Coffee shop",
+        distance: "3.2 meters",
+        matchScore: 84,
+        lat: 37.9158,
+        lng: -122.3095,
+      },
+      {
+        id: "p1-c2",
+        name: "Coffee Benu 2",
+        address: "1265 65th St, Emeryville, CA, 94608 United States",
+        category: "Coffee shop",
+        distance: "3.2 meters",
+        matchScore: 25,
+        lat: 37.9163,
+        lng: -122.3101,
+      },
+      {
+        id: "p1-c3",
+        name: "Samco Builders Inc",
+        address: "2200 Powell St, Emeryville, CA, 94608 United States",
+        category: "General Contractor",
+        distance: "1.4 km",
+        matchScore: 52,
+        lat: 37.9145,
+        lng: -122.3120,
+      },
+    ],
   },
-  candidates: [
-    {
-      id: "c1",
-      name: "Coffee Benu 1",
-      address: "1265 65th St, Emeryville, CA, 94608 United States",
+  {
+    id: "place-2",
+    source: {
+      name: "Blue Bottle Coffee",
+      address: "4270 Hollis St, Emeryville, CA, 94608",
       category: "Coffee shop",
-      distance: "3.2 meters",
-      matchScore: 84,
-      lat: 37.9158,
-      lng: -122.3095,
+      externalReferenceId: "71a9c4e28f3b12d90e55ab12",
+      lat: 37.8312,
+      lng: -122.2876,
     },
-    {
-      id: "c2",
-      name: "Coffee Benu 2",
-      address: "1265 65th St, Emeryville, CA, 94608 United States",
-      category: "Coffee shop",
-      distance: "3.2 meters",
-      matchScore: 25,
-      lat: 37.9163,
-      lng: -122.3101,
+    candidates: [
+      {
+        id: "p2-c1",
+        name: "Blue Bottle Coffee - Emeryville",
+        address: "4270 Hollis St, Emeryville, CA, 94608 United States",
+        category: "Coffee shop",
+        distance: "12 meters",
+        matchScore: 91,
+        lat: 37.8310,
+        lng: -122.2874,
+      },
+      {
+        id: "p2-c2",
+        name: "Peet's Coffee",
+        address: "5959 Shellmound St, Emeryville, CA, 94608 United States",
+        category: "Coffee shop",
+        distance: "640 meters",
+        matchScore: 38,
+        lat: 37.8341,
+        lng: -122.2920,
+      },
+      {
+        id: "p2-c3",
+        name: "Starbucks",
+        address: "5750 Christie Ave, Emeryville, CA, 94608 United States",
+        category: "Coffee shop",
+        distance: "1.1 km",
+        matchScore: 22,
+        lat: 37.8365,
+        lng: -122.2948,
+      },
+    ],
+  },
+  {
+    id: "place-3",
+    source: {
+      name: "El Cerrito Natural Grocery",
+      address: "10367 San Pablo Ave, El Cerrito, CA, 94530",
+      category: "Grocery store",
+      externalReferenceId: "5e2b91f04c88a17d3f6c2091",
+      lat: 37.9064,
+      lng: -122.3102,
     },
-    {
-      id: "c3",
-      name: "Samco Builders Inc",
-      address: "2200 Powell St, Emeryville, CA, 94608 United States",
-      category: "General Contractor",
-      distance: "1.4 km",
-      matchScore: 52,
-      lat: 37.9145,
-      lng: -122.3120,
-    },
-  ],
-};
+    candidates: [
+      {
+        id: "p3-c1",
+        name: "El Cerrito Natural Grocery Co",
+        address: "10367 San Pablo Ave, El Cerrito, CA, 94530 United States",
+        category: "Grocery store",
+        distance: "8 meters",
+        matchScore: 88,
+        lat: 37.9065,
+        lng: -122.3100,
+      },
+      {
+        id: "p3-c2",
+        name: "Safeway",
+        address: "11450 San Pablo Ave, El Cerrito, CA, 94530 United States",
+        category: "Grocery store",
+        distance: "1.2 km",
+        matchScore: 41,
+        lat: 37.9138,
+        lng: -122.3095,
+      },
+      {
+        id: "p3-c3",
+        name: "Berkeley Bowl West",
+        address: "920 Heinz Ave, Berkeley, CA, 94710 United States",
+        category: "Grocery store",
+        distance: "3.4 km",
+        matchScore: 19,
+        lat: 37.8536,
+        lng: -122.2930,
+      },
+    ],
+  },
+];
 
 type PlaceStatus = "open" | "closed" | "invalid" | null;
 
@@ -103,6 +191,9 @@ export default function ReviewV2Page() {
   const [loading, setLoading] = useState(false);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [hoveredCandidateId, setHoveredCandidateId] = useState<string | null>(null);
+  const [currentPlaceIndex, setCurrentPlaceIndex] = useState(0);
+
+  const currentPlace = samplePlaces[currentPlaceIndex];
 
   const handleStatusSelect = useCallback((status: PlaceStatus) => {
     setPlaceStatus(status);
@@ -138,10 +229,10 @@ export default function ReviewV2Page() {
   const handleSkip = useCallback(() => {
     setLoading(true);
     setTimeout(() => {
-      console.log("Skipped to next task");
-      // Reset for demo - move to next task
+      setCurrentPlaceIndex((prev) => (prev + 1) % samplePlaces.length);
       setPlaceStatus(null);
       setSelectedMatches(new Set());
+      setHoveredCandidateId(null);
       setLoading(false);
     }, 1000);
   }, []);
@@ -153,12 +244,12 @@ export default function ReviewV2Page() {
     () => [
       {
         id: "source",
-        lat: samplePlace.source.lat,
-        lng: samplePlace.source.lng,
-        label: samplePlace.source.name,
+        lat: currentPlace.source.lat,
+        lng: currentPlace.source.lng,
+        label: currentPlace.source.name,
         type: "source" as const,
       },
-      ...samplePlace.candidates.map((c) => ({
+      ...currentPlace.candidates.map((c) => ({
         id: c.id,
         lat: c.lat,
         lng: c.lng,
@@ -166,7 +257,7 @@ export default function ReviewV2Page() {
         type: "candidate" as const,
       })),
     ],
-    []
+    [currentPlace]
   );
 
   return (
@@ -241,7 +332,7 @@ export default function ReviewV2Page() {
               <CardContent className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <h2 className="text-[16px] leading-[24px] font-semibold text-[#171417] underline decoration-foreground/30 underline-offset-2">
-                    {samplePlace.source.name}
+                    {currentPlace.source.name}
                   </h2>
                   <Image
                     src="/icons/map-pin-red.svg"
@@ -252,10 +343,10 @@ export default function ReviewV2Page() {
                   />
                 </div>
                 <p className="text-[14px] leading-[20px] font-normal text-foreground">
-                  {samplePlace.source.address}
+                  {currentPlace.source.address}
                 </p>
                 <p className="text-[14px] leading-[20px] font-normal text-[#646464]">
-                  {samplePlace.source.category}
+                  {currentPlace.source.category}
                 </p>
 
                 <div className="flex items-center gap-4 pt-1">
@@ -265,7 +356,7 @@ export default function ReviewV2Page() {
                     className="text-primary p-0 h-auto text-[14px] leading-[20px] font-medium"
                     onClick={() =>
                       window.open(
-                        `https://www.google.com/search?q=${encodeURIComponent(samplePlace.source.name + " " + samplePlace.source.address)}`,
+                        `https://www.google.com/search?q=${encodeURIComponent(currentPlace.source.name + " " + currentPlace.source.address)}`,
                         "_blank"
                       )
                     }
@@ -283,7 +374,7 @@ export default function ReviewV2Page() {
 
                 <div className="flex items-center gap-2 pt-1">
                   <code className="text-[12px] leading-[16px] font-semibold font-mono text-[#646464]">
-                    External Place Reference ID: {samplePlace.source.externalReferenceId}
+                    External Place Reference ID: {currentPlace.source.externalReferenceId}
                   </code>
                   <Button
                     variant="ghost"
@@ -291,7 +382,7 @@ export default function ReviewV2Page() {
                     className="size-5"
                     onClick={() =>
                       navigator.clipboard.writeText(
-                        samplePlace.source.externalReferenceId
+                        currentPlace.source.externalReferenceId
                       )
                     }
                   >
@@ -375,7 +466,7 @@ export default function ReviewV2Page() {
                 </h3>
 
                 <div className="space-y-3">
-                  {samplePlace.candidates.map((candidate) => (
+                  {currentPlace.candidates.map((candidate) => (
                     <Card
                       key={candidate.id}
                       className={cn(
@@ -424,6 +515,7 @@ export default function ReviewV2Page() {
                 </div>
 
                 <ManualVenueInput
+                  key={placeStatus}
                   className="pt-4"
                   onMatch={(venueId) => {
                     setSelectedMatches((prev) => new Set(prev).add(venueId.trim()));
@@ -461,7 +553,7 @@ export default function ReviewV2Page() {
           <MapPanel
             pins={mapPins}
             highlightedPinId={hoveredCandidateId}
-            center={[samplePlace.source.lat, samplePlace.source.lng]}
+            center={[currentPlace.source.lat, currentPlace.source.lng]}
             zoom={15}
             className="absolute inset-0"
           />

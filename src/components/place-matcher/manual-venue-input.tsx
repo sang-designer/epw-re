@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,16 @@ export function ManualVenueInput({
   className,
 }: ManualVenueInputProps) {
   const [venueId, setVenueId] = useState("");
+  const [linkedId, setLinkedId] = useState<string | null>(null);
+
+  const trimmedId = venueId.trim();
+  const isLinked = linkedId !== null && linkedId === trimmedId;
+
+  const handleLink = () => {
+    if (!trimmedId || isLinked) return;
+    onMatch?.(trimmedId);
+    setLinkedId(trimmedId);
+  };
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -31,10 +42,11 @@ export function ManualVenueInput({
         <Button
           variant="outline"
           className="text-[14px] leading-[20px] font-medium text-primary border-primary hover:bg-primary/10"
-          disabled={!venueId.trim()}
-          onClick={() => onMatch?.(venueId)}
+          disabled={!trimmedId}
+          onClick={handleLink}
         >
-          Link
+          {isLinked && <Check className="size-4 text-primary" />}
+          {isLinked ? "Linked" : "Link"}
         </Button>
       </div>
     </div>
