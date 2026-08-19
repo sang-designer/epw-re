@@ -19,6 +19,7 @@ interface MapPanelProps {
   onPinClick?: (pinId: string) => void;
   center?: [number, number];
   zoom?: number;
+  locationLabel?: string;
   className?: string;
 }
 
@@ -49,6 +50,7 @@ export function MapPanel({
   onPinClick,
   center,
   zoom = 15,
+  locationLabel,
   className,
 }: MapPanelProps) {
   const mapRef = useRef<L.Map | null>(null);
@@ -64,10 +66,9 @@ export function MapPanel({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    mapRef.current = L.map(containerRef.current).setView(
-      center || [40.748, -73.986],
-      zoom
-    );
+    mapRef.current = L.map(containerRef.current, {
+      zoomControl: false,
+    }).setView(center || [40.748, -73.986], zoom);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
@@ -75,7 +76,13 @@ export function MapPanel({
       maxZoom: 19,
     }).addTo(mapRef.current);
 
+    const observer = new ResizeObserver(() => {
+      mapRef.current?.invalidateSize();
+    });
+    observer.observe(containerRef.current);
+
     return () => {
+      observer.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
     };
@@ -154,15 +161,11 @@ export function MapPanel({
 
   return (
     <div className={cn("relative", className)}>
-      {/* Location & radius controls */}
-      <div className="absolute top-4 right-4 z-[1000] flex items-center gap-2">
-        <div className="bg-white rounded-md border border-border px-3 py-1.5 text-[14px] leading-[20px] font-normal shadow-sm">
-          New York, NY, United States
+      {locationLabel && (
+        <div className="pointer-events-none absolute top-[max(0.75rem,env(safe-area-inset-top))] right-3 z-[1000] max-w-[min(70%,20rem)] truncate rounded-md border border-border bg-background px-2.5 py-1.5 text-[12px] leading-[16px] font-normal shadow-sm md:right-4 md:text-[14px] md:leading-[20px] md:px-3">
+          {locationLabel}
         </div>
-        <div className="bg-white rounded-md border border-border px-3 py-1.5 text-[14px] leading-[20px] font-normal shadow-sm">
-          25 mi
-        </div>
-      </div>
+      )}
       <div ref={containerRef} className="absolute inset-0" />
     </div>
   );

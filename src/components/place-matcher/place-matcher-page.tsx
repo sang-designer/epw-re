@@ -395,6 +395,14 @@ export default function PlaceMatcherPage() {
             onPinClick={(pinId) => setSelectedPinId(pinId)}
             center={[currentPlace.source.lat, currentPlace.source.lng]}
             zoom={15}
+            locationLabel={currentPlace.source.address
+              .replace(/,?\s*United States\s*$/i, "")
+              .split(",")
+              .map((part) => part.trim())
+              .slice(1, 3)
+              .map((part) => part.replace(/\d+/g, "").trim())
+              .filter(Boolean)
+              .join(", ")}
             className="absolute inset-0"
           />
         </div>

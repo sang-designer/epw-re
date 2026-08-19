@@ -220,7 +220,7 @@ export function InstructionsDialog({
 }: InstructionsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[85dvh] w-[calc(100%-2rem)] max-w-[600px] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-[24px] leading-[28px] font-semibold tracking-[-0.5px]">
             Instructions

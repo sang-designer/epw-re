@@ -4,7 +4,7 @@
 try{fetch('http://127.0.0.1:7517/ingest/f447d46f-6c78-42b3-93ec-b0c5eeb0d92a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2aa4cf'},body:JSON.stringify({sessionId:'2aa4cf',location:'review-v2/page.tsx:3',message:'Module evaluation started',data:{hasWindow:typeof window!=='undefined'},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});}catch(e){}
 // #endregion
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 try{fetch('http://127.0.0.1:7517/ingest/f447d46f-6c78-42b3-93ec-b0c5eeb0d92a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2aa4cf'},body:JSON.stringify({sessionId:'2aa4cf',location:'review-v2/page.tsx:18',message:'Before Checkbox import',data:{hasWindow:typeof window!=='undefined'},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});}catch(e){}
 // #endregion
 import { Checkbox } from "@/components/ui/checkbox";
-import { Info, Check } from "lucide-react";
+import { Info, Check, ChevronLeft } from "lucide-react";
 
 // #region agent log
 try{fetch('http://127.0.0.1:7517/ingest/f447d46f-6c78-42b3-93ec-b0c5eeb0d92a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2aa4cf'},body:JSON.stringify({sessionId:'2aa4cf',location:'review-v2/page.tsx:23',message:'Before Card import',data:{hasWindow:typeof window!=='undefined'},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});}catch(e){}
@@ -181,6 +181,20 @@ const samplePlaces = [
 
 type PlaceStatus = "open" | "closed" | "invalid" | null;
 
+function formatMapLocation(address: string) {
+  const parts = address
+    .replace(/,?\s*United States\s*$/i, "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length >= 2) {
+    const city = parts[1];
+    const state = (parts[2] ?? "").replace(/\d+/g, "").trim();
+    return state ? `${city}, ${state}` : city;
+  }
+  return address;
+}
+
 export default function ReviewV2Page() {
   // #region agent log
   try{fetch('http://127.0.0.1:7517/ingest/f447d46f-6c78-42b3-93ec-b0c5eeb0d92a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2aa4cf'},body:JSON.stringify({sessionId:'2aa4cf',location:'review-v2/page.tsx:45',message:'Component function execution started - POST FIX',data:{hasWindow:typeof window!=='undefined'},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});}catch(e){}
@@ -192,6 +206,7 @@ export default function ReviewV2Page() {
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [hoveredCandidateId, setHoveredCandidateId] = useState<string | null>(null);
   const [currentPlaceIndex, setCurrentPlaceIndex] = useState(0);
+  const [mapExpanded, setMapExpanded] = useState(false);
 
   const currentPlace = samplePlaces[currentPlaceIndex];
 
@@ -233,11 +248,30 @@ export default function ReviewV2Page() {
       setPlaceStatus(null);
       setSelectedMatches(new Set());
       setHoveredCandidateId(null);
+      setMapExpanded(false);
       setLoading(false);
     }, 1000);
   }, []);
 
   const showMatches = placeStatus !== null;
+
+  useEffect(() => {
+    if (!mapExpanded) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMapExpanded(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mapExpanded]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const onChange = () => {
+      if (mediaQuery.matches) setMapExpanded(false);
+    };
+    mediaQuery.addEventListener("change", onChange);
+    return () => mediaQuery.removeEventListener("change", onChange);
+  }, []);
 
   // Build map pins
   const mapPins = useMemo(
@@ -261,30 +295,29 @@ export default function ReviewV2Page() {
   );
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex h-dvh flex-col overflow-hidden">
       <Header />
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left panel */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Page title + instructions */}
-          <div className="px-4 pt-3 pb-1 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <h1 className="text-[20px] leading-[28px] font-semibold text-foreground">
+      <div className="grid min-h-0 flex-1 overflow-hidden grid-rows-[auto_11rem_minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_40%] md:grid-rows-[auto_minmax(0,1fr)]">
+        {/* Page title + instructions */}
+        <div className={cn("min-w-0 shrink-0 space-y-1.5 px-3 pt-3 pb-1 md:px-4", mapExpanded && "invisible md:visible")}>
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="min-w-0 text-[18px] leading-[24px] font-semibold text-foreground md:text-[20px] md:leading-[28px]">
                 Review Pending Places
               </h1>
               <Button
                 variant="link"
-                className="text-primary p-0 h-auto text-[14px] leading-[20px] font-normal"
+                className="h-auto shrink-0 p-0 text-[14px] leading-[20px] font-normal text-primary"
                 onClick={() => setInstructionsOpen(true)}
               >
                 <Info className="size-4 mr-1.5" />
-                Instructions
+                <span className="hidden sm:inline">Instructions</span>
+                <span className="sm:hidden">Help</span>
               </Button>
             </div>
 
             {/* Color legend */}
-            <div className="flex items-center gap-4 text-[12px] leading-[16px] text-[#646464]">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] leading-[16px] text-[#646464]">
               <span className="inline-flex items-center gap-1">
                 <Image src="/icons/map-pin-red.svg" alt="" width={14} height={18} className="shrink-0" />
                 Place to match
@@ -296,42 +329,98 @@ export default function ReviewV2Page() {
             </div>
           </div>
 
+        {/* Map: compact strip on mobile, side panel on desktop */}
+        <div className="relative z-0 min-h-0 border-b border-border md:col-start-2 md:row-span-2 md:row-start-1 md:border-b-0 md:border-l">
+          <div
+            className={cn(
+              "absolute inset-0",
+              mapExpanded &&
+                "fixed inset-0 z-[200] bg-background md:static md:z-0"
+            )}
+          >
+            <MapPanel
+              pins={mapPins}
+              highlightedPinId={hoveredCandidateId}
+              center={[currentPlace.source.lat, currentPlace.source.lng]}
+              zoom={15}
+              locationLabel={formatMapLocation(currentPlace.source.address)}
+              className="absolute inset-0"
+            />
+            {mapExpanded ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="absolute top-[max(0.75rem,env(safe-area-inset-top))] left-3 z-[1100] size-9 rounded-full bg-background shadow-md md:hidden"
+                onClick={() => setMapExpanded(false)}
+                aria-label="Close map"
+              >
+                <ChevronLeft />
+              </Button>
+            ) : (
+              <button
+                type="button"
+                className="absolute inset-0 z-[900] cursor-pointer md:hidden"
+                onClick={() => setMapExpanded(true)}
+                aria-label="Expand map"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Review content */}
+        <div className={cn("flex min-h-0 min-w-0 flex-col overflow-hidden md:col-start-1 md:row-start-2", mapExpanded && "invisible md:visible")}>
+          {/* Scrolls as one column on mobile; splits on desktop */}
+          <div
+            className={cn(
+              "min-h-0 flex-1",
+              placeStatus
+                ? "overflow-y-auto md:flex md:flex-col md:overflow-hidden"
+                : "flex flex-col overflow-y-auto md:overflow-hidden"
+            )}
+          >
           {/* Top Section - Location Card */}
           <div className={cn(
-            "px-4 py-6 border-b border-border shrink-0 transition-all duration-500 ease-out",
-            !placeStatus && "flex-1 flex items-center justify-center"
+            "border-b border-border px-3 py-4 transition-all duration-500 ease-out md:px-4 md:py-6",
+            !placeStatus && "flex flex-1 items-center justify-center",
+            placeStatus && "md:shrink-0"
           )}>
             <div className={cn(
-              "transition-all duration-500 ease-out space-y-4",
-              !placeStatus && "max-w-2xl w-full"
+              "w-full space-y-4 transition-all duration-500 ease-out",
+              !placeStatus && "max-w-2xl"
             )}>
             {/* Step Indicator */}
-            <div className="flex items-center gap-2 text-[12px] leading-[16px] font-medium">
+            <div className="flex flex-wrap items-center gap-1.5 text-[12px] leading-[16px] font-medium md:gap-2">
               <div className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors",
+                "flex items-center gap-2 rounded-full px-2.5 py-1.5 transition-colors md:px-3",
                 !placeStatus ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
               )}>
-                <span className="flex items-center justify-center size-5 rounded-full bg-current/20 text-current font-semibold text-[10px]">
+                <span className="flex size-5 items-center justify-center rounded-full bg-current/20 text-[10px] font-semibold text-current">
                   1
                 </span>
                 <span>Select Status</span>
               </div>
-              <div className="h-px w-8 bg-border" />
+              <div className="hidden h-px w-8 bg-border sm:block" />
               <div className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors",
+                "flex items-center gap-2 rounded-full px-2.5 py-1.5 transition-colors md:px-3",
                 showMatches ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
               )}>
-                <span className="flex items-center justify-center size-5 rounded-full bg-current/20 text-current font-semibold text-[10px]">
+                <span className="flex size-5 items-center justify-center rounded-full bg-current/20 text-[10px] font-semibold text-current">
                   2
                 </span>
-                <span>Select Matches {!showMatches && "(if applicable)"}</span>
+                <span>
+                  Select Matches
+                  {!showMatches && (
+                    <span className="hidden sm:inline"> (if applicable)</span>
+                  )}
+                </span>
               </div>
             </div>
             
             <Card className="overflow-hidden bg-primary/5 border-primary/20">
               <CardContent className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-[16px] leading-[24px] font-semibold text-[#171417] underline decoration-foreground/30 underline-offset-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <h2 className="min-w-0 text-[16px] leading-[24px] font-semibold break-words text-[#171417] underline decoration-foreground/30 underline-offset-2">
                     {currentPlace.source.name}
                   </h2>
                   <Image
@@ -342,18 +431,18 @@ export default function ReviewV2Page() {
                     className="shrink-0"
                   />
                 </div>
-                <p className="text-[14px] leading-[20px] font-normal text-foreground">
+                <p className="text-[14px] leading-[20px] font-normal break-words text-foreground">
                   {currentPlace.source.address}
                 </p>
                 <p className="text-[14px] leading-[20px] font-normal text-[#646464]">
                   {currentPlace.source.category}
                 </p>
 
-                <div className="flex items-center gap-4 pt-1">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
                   <Button
                     variant="link"
                     size="sm"
-                    className="text-primary p-0 h-auto text-[14px] leading-[20px] font-medium"
+                    className="h-auto p-0 text-[14px] leading-[20px] font-medium text-primary"
                     onClick={() =>
                       window.open(
                         `https://www.google.com/search?q=${encodeURIComponent(currentPlace.source.name + " " + currentPlace.source.address)}`,
@@ -372,14 +461,14 @@ export default function ReviewV2Page() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 pt-1">
-                  <code className="text-[12px] leading-[16px] font-semibold font-mono text-[#646464]">
+                <div className="flex min-w-0 items-start gap-2 pt-1">
+                  <code className="min-w-0 text-[12px] leading-[16px] font-semibold font-mono break-all text-[#646464]">
                     External Place Reference ID: {currentPlace.source.externalReferenceId}
                   </code>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="size-5"
+                    className="size-5 shrink-0"
                     onClick={() =>
                       navigator.clipboard.writeText(
                         currentPlace.source.externalReferenceId
@@ -395,43 +484,48 @@ export default function ReviewV2Page() {
               </CardContent>
 
               {/* Toggle buttons */}
-              <div className="px-4 pb-4 pt-3 grid grid-cols-3 gap-3">
+              <div
+                className={cn(
+                  "grid grid-cols-3 gap-2 px-3 pt-3 pb-4 md:gap-3 md:px-4",
+                  mapExpanded && "hidden"
+                )}
+              >
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full relative",
+                    "relative w-full px-1.5 md:px-2.5",
                     placeStatus === "open" && "border-primary bg-primary/5"
                   )}
                   onClick={() => handleStatusSelect("open")}
                 >
                   {placeStatus === "open" && (
-                    <Check className="size-4 mr-2 text-primary" />
+                    <Check className="size-4 shrink-0 text-primary md:mr-2" />
                   )}
                   Open
                 </Button>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full relative text-destructive border-destructive hover:bg-destructive/10",
+                    "relative w-full px-1.5 text-destructive border-destructive hover:bg-destructive/10 md:px-2.5",
                     placeStatus === "closed" && "bg-destructive/5"
                   )}
                   onClick={() => handleStatusSelect("closed")}
                 >
                   {placeStatus === "closed" && (
-                    <Check className="size-4 mr-2 text-destructive" />
+                    <Check className="size-4 shrink-0 text-destructive md:mr-2" />
                   )}
                   Closed
                 </Button>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full relative text-destructive border-destructive hover:bg-destructive/10",
+                    "relative w-full px-1.5 text-destructive border-destructive hover:bg-destructive/10 md:px-2.5",
                     placeStatus === "invalid" && "bg-destructive/5"
                   )}
                   onClick={() => handleStatusSelect("invalid")}
                 >
                   {placeStatus === "invalid" && (
-                    <Check className="size-4 mr-2 text-destructive" />
+                    <Check className="size-4 shrink-0 text-destructive md:mr-2" />
                   )}
                   Invalid
                 </Button>
@@ -440,7 +534,7 @@ export default function ReviewV2Page() {
 
             {/* Helper text */}
             {!placeStatus && (
-              <div className="text-center pt-2 space-y-2">
+              <div className="space-y-2 pt-2 text-center">
                 <p className="text-[14px] leading-[20px] text-[#646464]">
                   Choose whether this location is Open, Closed, or Invalid to continue
                 </p>
@@ -448,7 +542,7 @@ export default function ReviewV2Page() {
                   variant="link"
                   onClick={handleSkip}
                   disabled={loading}
-                  className="text-[14px] leading-[20px] h-auto p-0"
+                  className="h-auto p-0 text-[14px] leading-[20px]"
                 >
                   {loading ? "Skipping..." : "Skip"}
                 </Button>
@@ -459,77 +553,83 @@ export default function ReviewV2Page() {
 
           {/* Middle Section - Potential Matches */}
           {showMatches && (
-            <div className="flex-1 overflow-y-auto px-4 pb-20">
-              <div className="py-4">
-                <h3 className="text-[16px] leading-[24px] font-semibold text-foreground mb-4">
-                  Select a matching location
-                </h3>
+            <div className="px-3 py-4 md:flex-1 md:overflow-y-auto md:px-4 md:pb-20">
+              <h3 className="mb-4 text-[16px] leading-[24px] font-semibold text-foreground">
+                Select a matching location
+              </h3>
 
-                <div className="space-y-3">
-                  {currentPlace.candidates.map((candidate) => (
-                    <Card
-                      key={candidate.id}
-                      className={cn(
-                        "cursor-pointer transition-all",
-                        selectedMatches.has(candidate.id) && "ring-2 ring-primary shadow-md"
-                      )}
-                      onClick={() => toggleMatch(candidate.id)}
-                      onMouseEnter={() => setHoveredCandidateId(candidate.id)}
-                      onMouseLeave={() => setHoveredCandidateId(null)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={selectedMatches.has(candidate.id)}
-                            onCheckedChange={() => toggleMatch(candidate.id)}
-                            className="mt-1"
-                          />
-                          <div className="flex-1 min-w-0 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-[16px] leading-[24px] font-semibold text-foreground">
-                                {candidate.name}
-                              </h4>
-                              <Image
-                                src="/icons/map-pin-blue.svg"
-                                alt="Candidate location"
-                                width={16}
-                                height={20}
-                                className="shrink-0"
-                              />
-                            </div>
-                            <p className="text-[14px] leading-[20px] text-foreground">
-                              {candidate.address}
-                            </p>
-                            <div className="flex items-center gap-4 text-[12px] leading-[16px] text-[#646464]">
-                              <span>{candidate.category}</span>
-                              <span>Distance: {candidate.distance}</span>
-                              <span className="font-semibold">
-                                Match: {candidate.matchScore}%
-                              </span>
-                            </div>
+              <div className="space-y-3">
+                {currentPlace.candidates.map((candidate) => (
+                  <Card
+                    key={candidate.id}
+                    className={cn(
+                      "cursor-pointer transition-all",
+                      selectedMatches.has(candidate.id) && "ring-2 ring-primary shadow-md"
+                    )}
+                    onClick={() => {
+                      toggleMatch(candidate.id);
+                      setHoveredCandidateId(candidate.id);
+                    }}
+                    onMouseEnter={() => setHoveredCandidateId(candidate.id)}
+                    onMouseLeave={() => setHoveredCandidateId(null)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={selectedMatches.has(candidate.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          onCheckedChange={() => {
+                            toggleMatch(candidate.id);
+                            setHoveredCandidateId(candidate.id);
+                          }}
+                          className="mt-1"
+                        />
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <h4 className="min-w-0 text-[16px] leading-[24px] font-semibold break-words text-foreground">
+                              {candidate.name}
+                            </h4>
+                            <Image
+                              src="/icons/map-pin-blue.svg"
+                              alt="Candidate location"
+                              width={16}
+                              height={20}
+                              className="shrink-0"
+                            />
+                          </div>
+                          <p className="text-[14px] leading-[20px] break-words text-foreground">
+                            {candidate.address}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] leading-[16px] text-[#646464]">
+                            <span>{candidate.category}</span>
+                            <span>Distance: {candidate.distance}</span>
+                            <span className="font-semibold">
+                              Match: {candidate.matchScore}%
+                            </span>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                <ManualVenueInput
-                  key={placeStatus}
-                  className="pt-4"
-                  onMatch={(venueId) => {
-                    setSelectedMatches((prev) => new Set(prev).add(venueId.trim()));
-                  }}
-                />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
+
+              <ManualVenueInput
+                key={placeStatus}
+                className="pt-4 pb-4 md:pb-0"
+                onMatch={(venueId) => {
+                  setSelectedMatches((prev) => new Set(prev).add(venueId.trim()));
+                }}
+              />
             </div>
           )}
+          </div>
 
           {/* Bottom Section - Command Bar */}
           {placeStatus && (
-            <div className="sticky bottom-0 border-t border-border bg-background px-4 py-4 shrink-0 shadow-lg">
+            <div className="shrink-0 border-t border-border bg-background px-3 py-3 shadow-lg md:px-4 md:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <Button
-                className="w-full h-12 text-[16px] leading-[24px] font-medium"
+                className="h-12 w-full text-[16px] leading-[24px] font-medium"
                 onClick={handleSubmit}
                 disabled={loading}
               >
@@ -546,17 +646,6 @@ export default function ReviewV2Page() {
               </Button>
             </div>
           )}
-        </div>
-
-        {/* Right panel - Map */}
-        <div className="w-[40%] relative shrink-0 z-0">
-          <MapPanel
-            pins={mapPins}
-            highlightedPinId={hoveredCandidateId}
-            center={[currentPlace.source.lat, currentPlace.source.lng]}
-            zoom={15}
-            className="absolute inset-0"
-          />
         </div>
       </div>
 
